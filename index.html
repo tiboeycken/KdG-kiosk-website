@@ -113,7 +113,7 @@
             <div class="install-methods">
                 <!-- Quick Install -->
                 <div class="install-card featured">
-                    <h3>🚀 Snelle Installatie (Aanbevolen)</h3>
+                    <h3>🚀 Snelle Installatie (CLI)</h3>
                     <p>Download en installeer met één commando:</p>
                     <div class="code-block">
                         <code id="quick-install">wget -qO- https://kdg-kiosk.web.app/install.sh | bash</code>
@@ -131,11 +131,14 @@
 
                 <!-- Manual Install -->
                 <div class="install-card">
-                    <h3>📥 Handmatige Installatie</h3>
+                    <h3>📥 Default Installatie (GUI)</h3>
                     <p>Download de Python installer en voer deze uit:</p>
+                    <a href="/install-kdg-kiosk.py" download class="btn btn-outline"
+                        style="margin-bottom: 1rem; display: inline-block;">
+                        Download Installer
+                    </a>
                     <div class="code-block">
-                        <code id="manual-install">wget https://kdg-kiosk.web.app/install-kdg-kiosk.py
-python3 install-kdg-kiosk.py</code>
+                        <code id="manual-install">python3 install-kdg-kiosk.py</code>
                         <button class="copy-btn" onclick="copyToClipboard('manual-install')">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                                 <path
@@ -190,8 +193,7 @@ python3 install-kdg-kiosk.py</code>
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3>Configureer de Kiosk</h3>
-                        <p>Start de setup wizard vanuit het applicatiemenu of voer <code>kdg-kiosk-setup</code> uit in
-                            de terminal. Configureer:</p>
+                        <p>Start de setup wizard vanuit het applicatiemenu ("Setup Kiosk"). Configureer:</p>
                         <ul>
                             <li>Standaard browser (Chromium/Firefox)</li>
                             <li>Start-URL</li>
@@ -255,15 +257,6 @@ python3 install-kdg-kiosk.py</code>
                     <p>Gevonden een probleem? Help ons het te verbeteren:</p>
                     <a href="https://github.com/Brasco123/KdG-Kiosk/issues" class="btn btn-outline" target="_blank">
                         Rapporteer een Issue
-                    </a>
-                </div>
-
-                <div class="doc-card">
-                    <h3>💬 Community</h3>
-                    <p>Vragen of suggesties? Neem contact op:</p>
-                    <a href="https://github.com/Brasco123/KdG-Kiosk/discussions" class="btn btn-outline"
-                        target="_blank">
-                        GitHub Discussions
                     </a>
                 </div>
             </div>
