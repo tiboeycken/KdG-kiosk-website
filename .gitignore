@@ -1,0 +1,17 @@
+# Firebase
+.firebase/
+.firebaserc
+
+# Node modules (if you add any build tools later)
+node_modules/
+
+# Editor / system junk
+*~
+*.swp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
