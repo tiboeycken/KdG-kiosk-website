@@ -4,57 +4,13 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "README.md"
+      "**/node_modules/**"
     ],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css|html)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=300"
-          }
-        ]
-      },
-      {
-        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=604800"
-          }
-        ]
-      },
-      {
-        "source": "install-kdg-kiosk.py",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "text/x-python"
-          },
-          {
-            "key": "Content-Disposition",
-            "value": "attachment; filename=install-kdg-kiosk.py"
-          }
-        ]
-      },
-      {
-        "source": "install.sh",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "text/x-shellscript"
-          }
-        ]
-      }
     ]
   }
 }
-

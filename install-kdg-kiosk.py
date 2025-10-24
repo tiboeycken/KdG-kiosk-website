@@ -220,6 +220,35 @@ def check_dependencies():
     return missing
 
 
+def install_missing_dependencies(missing):
+    """Install missing dependencies"""
+    if not missing:
+        return True
+
+    print(f"\n⚠️  Missing dependencies: {', '.join(missing)}")
+    print("   Installing required dependencies...")
+
+    try:
+        # Update package list
+        subprocess.run(
+            ["sudo", "apt", "update"], check=True, capture_output=True, text=True
+        )
+
+        # Install missing packages
+        subprocess.run(
+            ["sudo", "apt", "install", "-y"] + missing,
+            check=True,
+            capture_output=False,  # Show output to user
+            text=True,
+        )
+
+        print("✓ Dependencies installed successfully\n")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Failed to install dependencies: {e}")
+        return False
+
+
 # ============================================================================
 # CLI Interface
 # ============================================================================
@@ -256,6 +285,19 @@ class CLIInstaller:
                 print(f"   • {error}")
             return False
         print("✓ System compatible\n")
+
+        # Check dependencies before continuing
+        print("📦 Checking dependencies...")
+        missing = check_dependencies()
+        if missing:
+            if not install_missing_dependencies(missing):
+                print("\n❌ Failed to install required dependencies.")
+                print("   Please install them manually:")
+                for dep in missing:
+                    print(f"     sudo apt install {dep}")
+                return False
+        else:
+            print("✓ All dependencies satisfied\n")
 
         # Check if running with sudo
         if not check_root():
@@ -330,12 +372,50 @@ class CLIInstaller:
         print("=" * 60)
         response = input("\nWould you like to run the setup wizard now? [Y/n]: ")
         if response.lower() != "n":
-            print("\n🚀 Launching setup wizard...\n")
+            print("\n🚀 Launching setup wizard...")
+            print("   The installer will now close.\n")
             try:
-                subprocess.Popen(["python3", "/usr/share/kdg-kiosk/setup_wizard.py"])
+                # Get the actual user (not root) if running with sudo
+                actual_user = os.environ.get("SUDO_USER") or os.environ.get("USER")
+
+                if actual_user and actual_user != "root":
+                    # Launch as the actual user, not root
+                    subprocess.Popen(
+                        [
+                            "sudo",
+                            "-u",
+                            actual_user,
+                            "python3",
+                            "/usr/share/kdg-kiosk/setup_wizard.py",
+                        ],
+                        start_new_session=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                else:
+                    # Not running via sudo, launch normally
+                    subprocess.Popen(
+                        ["python3", "/usr/share/kdg-kiosk/setup_wizard.py"],
+                        start_new_session=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                # Give wizard a moment to start before we exit
+                import time
+
+                time.sleep(0.5)
             except Exception as e:
                 print(f"⚠️  Could not launch setup wizard: {e}")
-                print("   You can run it manually with: kdg-kiosk-setup")
+                print(
+                    "   You can run it manually with: python3 /usr/share/kdg-kiosk/setup_wizard.py"
+                )
+                return False
+        else:
+            print(
+                "\n💡 Run 'python3 /usr/share/kdg-kiosk/setup_wizard.py' later to configure your kiosk.\n"
+            )
 
         return True
 
@@ -477,6 +557,24 @@ if GUI_AVAILABLE:
                 self.add_detail("⚠️ Sudo privileges required")
                 return
 
+            # Check dependencies
+            self.status_label.setText("Checking dependencies...")
+            self.add_detail("\n📦 Checking dependencies...")
+            missing = check_dependencies()
+            if missing:
+                self.add_detail(f"⚠️ Missing dependencies: {', '.join(missing)}")
+                if not install_missing_dependencies(missing):
+                    error_msg = (
+                        "Failed to install required dependencies.\n\nPlease install them manually:\n"
+                        + "\n".join(f"  sudo apt install {dep}" for dep in missing)
+                    )
+                    QMessageBox.critical(self, "Dependencies Error", error_msg)
+                    self.add_detail("❌ Failed to install dependencies")
+                    return
+                self.add_detail("✓ Dependencies installed")
+            else:
+                self.add_detail("✓ All dependencies satisfied")
+
             # Start installation
             self.start_installation()
 
@@ -571,16 +669,49 @@ if GUI_AVAILABLE:
             self.cleanup()
 
         def launch_wizard(self):
-            """Launch the setup wizard"""
+            """Launch the setup wizard as independent process"""
             try:
-                subprocess.Popen(["python3", "/usr/share/kdg-kiosk/setup_wizard.py"])
+                # Get the actual user (not root) if running with sudo
+                actual_user = os.environ.get("SUDO_USER") or os.environ.get("USER")
+
+                if actual_user and actual_user != "root":
+                    # Launch as the actual user, not root
+                    subprocess.Popen(
+                        [
+                            "sudo",
+                            "-u",
+                            actual_user,
+                            "python3",
+                            "/usr/share/kdg-kiosk/setup_wizard.py",
+                        ],
+                        start_new_session=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                else:
+                    # Not running via sudo, launch normally
+                    subprocess.Popen(
+                        ["python3", "/usr/share/kdg-kiosk/setup_wizard.py"],
+                        start_new_session=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                # Give wizard a moment to start
+                import time
+
+                time.sleep(0.5)
+
+                # Close installer - wizard is now running independently
                 self.close()
+                QApplication.quit()
             except Exception as e:
                 QMessageBox.warning(
                     self,
                     "Error",
                     f"Could not launch setup wizard: {e}\n\n"
-                    "You can run it manually with: kdg-kiosk-setup",
+                    "You can run it manually with: python3 /usr/share/kdg-kiosk/setup_wizard.py",
                 )
 
         def cleanup(self):
@@ -622,7 +753,9 @@ def main():
         if not args.cli and GUI_AVAILABLE:
             print("⚠️  No DISPLAY found, falling back to CLI mode\n")
         elif not GUI_AVAILABLE:
-            print("⚠️  PyQt5 not available, using CLI mode\n")
+            print("⚠️  PyQt5 not available, using CLI mode")
+            print("   To enable GUI mode, install PyQt5:")
+            print("   sudo apt install python3-pyqt5\n")
 
         installer = CLIInstaller(version=args.version)
         success = installer.run()
